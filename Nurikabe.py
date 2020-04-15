@@ -9,11 +9,11 @@ from pygame.locals import *
 if os.name == "nt":
     ctypes.windll.shcore.SetProcessDpiAwareness(2) # Ignorer le zoom
 
-width, height = 1000, 900
-square_default = 60
-white, black = (255,255,255), (0,0,0)
-gray1, gray2, gray3 = (220,220,220), (190,190,190), (150,150,150)
-blue, beige, red, purple = (208,250,249), (255,244,223), (255,0,0), (255,0,255)
+WIDTH, HEIGHT = 1000, 900
+SQUARE_DEFAULT = 60
+WHITE, BLACK = (255,255,255), (0,0,0)
+GRAY1, GRAY2, GRAY3 = (220,220,220), (190,190,190), (150,150,150)
+BLUE, BEIGE, RED, PURPLE = (208,250,249), (255,244,223), (255,0,0), (255,0,255)
 
 def load_grid(num):
     grille = []
@@ -33,38 +33,44 @@ def load_grid(num):
                 assert len(grille[-1]) == m
             except AssertionError:
                 raise ValueError(f"Le nombre de colonnes ({m}) n'est pas respecté sur la ligne {i+1}")
-        if f.readline() or f.readline():
+        if f.readline():
             raise ValueError(f"Il y a plus de lignes que les {n} promises")
     return n, m, grille
 
 def load_grids():
-    assert "Grilles" in os.listdir()
     erreur = ""
-    for name in os.listdir(".\Grilles"):
+    if "Grilles" not in os.listdir():
+        erreur += "Problème dans le dossier Nurikabe :\nIl n'y a pas de dossier Grilles pour contenir les grilles.\nLe dossier a peut-être été renommé, déplacé, ou supprimé.\nS'il est introuvable vous devrez réinstaller l'application.\n"
+        raise FileNotFoundError(erreur)
+    no_grid = True
+    for name in os.listdir("Grilles"):
         if name.endswith(".txt"):
             try:
                 grilles[name[:-4]] = load_grid(name[:-4])
-            except Exception as e:
-                erreur += f"Problème sur la grille {name[:-4]} :\n\t{e}\n"
+                no_grid = False
+            except ValueError as e:
+                erreur += f"Problème sur la grille {name[:-4]} :\n{e}\n"
         else:
-            erreur += f"Problème dans le dossier Grilles :\n\tLe fichier {name} n'a pas pour extension .txt donc n'est pas considéré comme une grille.\n"
+            erreur += f"Problème dans le dossier Grilles :\nLe fichier {name} n'a pas pour extension .txt donc n'est pas considéré comme une grille.\n"
+    if no_grid:
+        erreur += "Problème dans le dossier Grilles :\nIl n'y a aucune grille.\n"
     if erreur:
-        raise ValueError(erreur)
+        raise Exception(erreur)
 
-def message_display(text, size, xc=width//2, yc=height//2):
+def message_display(text, size, xc=WIDTH//2, yc=HEIGHT//2):
     lines = text.split("\n")
     y = yc - (len(lines)-1)*size//2
     font = pygame.font.SysFont("comicsansms",size)
     for line in lines:
-        surface = font.render(line, True, black)
+        surface = font.render(line, True, BLACK)
         rectangle = surface.get_rect()
         rectangle.center = (xc, y)
         display.blit(surface, rectangle)
         y+=size
 
 def bottom_message_display(text, size):
-    pygame.draw.rect(display, white,(0,height-150,width,150))
-    message_display(text, size, width//2, height-75)
+    pygame.draw.rect(display, WHITE, (0,HEIGHT-150, WIDTH,150))
+    message_display(text, size, WIDTH//2, HEIGHT-75)
 
 def show_rules():
     text = "Il y a une grille de carrés, dont certains contiennent un nombre. Le but est de déterminer pour chaque\ncarré s'il est rivière ou terre ferme. Les cases de rivière forment le nurikabe (courant en japonais) : elles\ndoivent toutes être contigües par un côté, ne doivent pas contenir de nombre et ne doivent contenir aucun\nbloc 2x2 ou plus grand (de tels blocs sont appelés bassins). Les cases de terre ferme forment les îles :\nchaque nombre doit faire partie d'un îlot d'autant de cases de terre ferme. Chaque case de terre\nferme ne doit appartenir qu'à une seule île et chaque île ne contient qu'un nombre."
@@ -131,7 +137,7 @@ def verify():
                 if len(ile) != k-1 or any(grille[x//m][x%m].isdigit() for x in ile):
                     correct = False # Taille pas bonne ou plusieurs iles regroupées
                     for x in ile+[i*m+j]:
-                        states[-1][x] = 3 # red
+                        states[-1][x] = 3 # RED
                 island_seen.add(find[i*m+j])
     for i in range(n):
         for j in range(m):
@@ -140,7 +146,7 @@ def verify():
                 ile = [x for x in range(n*m) if find[x]==find[i*m+j]]
                 for x in range(n*m):
                     if find[x]==find[i*m+j]:
-                         states[-1][x] = 3 # red
+                         states[-1][x] = 3 # RED
     if len(water_seen) > 1:
         correct = False # rivière pas connexe
         w=max(water_seen)
@@ -148,13 +154,13 @@ def verify():
             for j in range(m):
                 if not grille[i][j].isdigit():
                     if find[i*m+j] == w:
-                        states[-1][i*m+j] = 4 # purple
+                        states[-1][i*m+j] = 4 # PURPLE
     for i in range(n-1):
         for j in range(m-1):
             if states[-1][i*m+j]==states[-1][i*m+j+1]==states[-1][i*m+j+m]==states[-1][i*m+j+m+1]==1:
                 correct = False # Bassin (2*2 d'eau)
                 for x in [i*m+j,i*m+j+1,i*m+j+m,i*m+j+m+1]:
-                    states[-1][x] = 4 # purple
+                    states[-1][x] = 4 # PURPLE
     if correct:
         won.add(current_grid)
     else:
@@ -172,11 +178,11 @@ def print_new_grid(num):
     print_grid()
 
 def print_grid():
-    display.fill(white)
+    display.fill(WHITE)
     n, m, grille = grilles[current_grid]
-    sq_len = min(720//max(n,m), square_default)
-    xdeb = width//2 - sq_len * m // 2
-    ydeb = (height-150)//2 - sq_len * n // 2
+    sq_len = min(720//max(n,m), SQUARE_DEFAULT)
+    xdeb = WIDTH//2 - sq_len * m // 2
+    ydeb = (HEIGHT-150)//2 - sq_len * n // 2
     xfin = xdeb + sq_len * m
     yfin = ydeb + sq_len * n
     for i in range(n+1):
@@ -185,7 +191,7 @@ def print_grid():
         pygame.draw.line(display, (0,0,0), (xdeb+sq_len*i,ydeb), (xdeb+sq_len*i,yfin), 2)
     for i in range(n):
         for j in range(m):
-            color = [white, blue, beige, red, purple][states[-1][i*m+j]]
+            color = [WHITE, BLUE, BEIGE, RED, PURPLE][states[-1][i*m+j]]
             pygame.draw.rect(display, color, Rect(xdeb+j*sq_len+2, ydeb+i*sq_len+2, sq_len-2, sq_len-2))
             if grille[i][j].isdigit():
                 message_display(grille[i][j], sq_len-2, xdeb+j*sq_len+sq_len//2, ydeb+i*sq_len+sq_len//2)
@@ -196,11 +202,11 @@ def onclick(b, x, y):
         write = not write
         if write: pygame.mouse.set_cursor(*cursor_write)
         else: pygame.mouse.set_cursor(*cursor_erase)
-    elif 100 <= x <= width-100:
+    elif 100 <= x <= WIDTH-100:
         n, m, grille = grilles[current_grid]
-        sq_len = min(720//max(n,m), square_default)
-        xdeb = width//2 - sq_len * m // 2
-        ydeb = (height-150)//2 - sq_len * n // 2
+        sq_len = min(720//max(n,m), SQUARE_DEFAULT)
+        xdeb = WIDTH//2 - sq_len * m // 2
+        ydeb = (HEIGHT-150)//2 - sq_len * n // 2
         xfin = xdeb + sq_len * m
         yfin = ydeb + sq_len * n
         if xdeb<=x<=xfin and ydeb<=y<=yfin:
@@ -218,38 +224,38 @@ def onclick(b, x, y):
 def show_buttons(from_undo=False):
     xbtn = ybtn = 5
     for i in grilles:
-        button(i, xbtn,ybtn, 90,30, gray1 if i!=current_grid else gray3,gray3, lambda:print_new_grid(i))
+        button(i, xbtn,ybtn, 90,30, GRAY1 if i!=current_grid else GRAY3,GRAY3, lambda:print_new_grid(i))
         if i in won:
-            display.blit(checkmark, (xbtn + 96, ybtn))
+            display.blit(checkmark, (xbtn + 95 + 1, ybtn))
         ybtn+=35
-    button("+", xbtn,ybtn, 90,30, gray1,gray3, show_new)
-    xbtn, ybtn = width - 90 - 5, 5
-    button("Règles", xbtn,ybtn, 90,30, gray2,gray3, show_rules)
-    button("Aide", xbtn,ybtn+35, 90,30, gray2,gray3, show_help)
+    button("+", xbtn,ybtn, 90,30, GRAY1,GRAY3, show_new)
+    xbtn, ybtn = WIDTH - 90 - 5, 5
+    button("Règles", xbtn,ybtn, 90,30, GRAY2,GRAY3, show_rules)
+    button("Aide", xbtn,ybtn+35, 90,30, GRAY2,GRAY3, show_help)
     if len(states)>1 and not from_undo:
-        button("Undo", xbtn,ybtn+140, 90,30, gray2,gray3, undo)
+        button("Undo", xbtn,ybtn+140, 90,30, GRAY2,GRAY3, undo)
     else:
-        button("", xbtn,ybtn+140, 90,30, white,white)
+        button("", xbtn,ybtn+140, 90,30, WHITE,WHITE)
     if states[-1].count(0)+states[-1].count(3)+states[-1].count(4)==0:
-        button("Vérifier", xbtn,ybtn+175, 90,30, gray2,gray3, verify)
+        button("Vérifier", xbtn,ybtn+175, 90,30, GRAY2,GRAY3, verify)
     else:
-        button("", xbtn,ybtn+175, 90,30, white,white)
+        button("", xbtn,ybtn+175, 90,30, WHITE,WHITE)
 
 
 def main():
     global grilles, display, clock, current_grid, states, write, cursor_write, cursor_erase, checkmark, won
 
     pygame.init()
-    display = pygame.display.set_mode((width,height))
+    display = pygame.display.set_mode((WIDTH,HEIGHT))
     pygame.display.set_caption("Nurikabe")
-    icon = pygame.image.load(os.path.join("Icones","app_icon.png"))
+    icon = pygame.image.load(os.path.join("Icones", "app_icon.png"))
     pygame.display.set_icon(icon)
     clock = pygame.time.Clock()
-    display.fill(white)
+    display.fill(WHITE)
     pygame.display.flip()
 
     cursor_bin = []
-    with open(os.path.join("Icones","cursor_icon.txt")) as f:
+    with open(os.path.join("Icones", "cursor_icon.txt")) as f:
         for line in f.readlines():
             cursor_bin.append(line.split('"')[1])
     cursor_write = pygame.cursors.compile(cursor_bin)
@@ -264,9 +270,14 @@ def main():
     won = set()
     states = []
     grilles = {}
-    load_grids()
+    try:
+        load_grids()
+    except Exception as e:
+        message_display(str(e), 20)
+        pygame.display.update()
+        raise
     current_grid = None
-    print_new_grid("04x04 1") # current_grid = "04x04 1"
+    print_new_grid(os.listdir("Grilles")[0][:-4]) # current_grid = "04x04 1"
 
     while True:
         for event in pygame.event.get():
