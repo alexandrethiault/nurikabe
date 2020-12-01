@@ -31,7 +31,7 @@ if sys.platform == "win32":
 cx_Freeze.setup(
     name="Nurikabe",
     author= "Alexandre Thiault",
-    description="Nurikabe jouable sur Windows 10",
+    description="Nurikabe numérique pour Windows 10",
     options=
     {
         "build_exe":

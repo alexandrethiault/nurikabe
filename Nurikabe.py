@@ -43,7 +43,17 @@ def load_grids():
         erreur += "Problème dans le dossier Nurikabe :\nIl n'y a pas de dossier Grilles pour contenir les grilles.\nLe dossier a peut-être été renommé, déplacé, ou supprimé.\nS'il est introuvable vous devrez réinstaller l'application.\n"
         raise FileNotFoundError(erreur)
     no_grid = True
-    for name in os.listdir("Grilles"):
+
+    def cmp(i):
+        if i.endswith(".txt"): i = i[:-4]
+        t = i.split(" ")
+        print(i)
+        for i,elt in enumerate(t):
+            if elt.isdigit():
+                t[i] = "0"*max(0,9-len(elt))+elt
+        return ''.join(t)
+
+    for name in sorted(os.listdir("Grilles"), key=cmp):
         if name.endswith(".txt"):
             try:
                 grilles[name[:-4]] = load_grid(name[:-4])
@@ -168,6 +178,17 @@ def verify():
         show_rules()
         states.pop()
 
+
+def prev_page():
+    global current_page
+    if current_page > 0:
+        current_page -= 1
+
+def next_page():
+    global current_page
+    if current_page*20 + 20 <= len(grilles):
+        current_page += 1
+
 def print_new_grid(num):
     global current_grid
     current_grid = num
@@ -223,12 +244,16 @@ def onclick(b, x, y):
 
 def show_buttons(from_undo=False):
     xbtn = ybtn = 5
-    for i in grilles:
+    page = current_page
+    button("", 0,0, 135,35*21+5, WHITE,WHITE)
+    for i in list(grilles.keys())[page*20:page*20+20]:
         button(i, xbtn,ybtn, 90,30, GRAY1 if i!=current_grid else GRAY3,GRAY3, lambda:print_new_grid(i))
         if i in won:
             display.blit(checkmark, (xbtn + 95 + 1, ybtn))
         ybtn+=35
-    button("+", xbtn,ybtn, 90,30, GRAY1,GRAY3, show_new)
+
+    button("<", xbtn,ybtn, 40,30, GRAY1 if page>0 else WHITE,GRAY3 if page>0 else WHITE, prev_page)
+    button(">", xbtn+50,ybtn, 40,30, GRAY1 if page*20+20<=len(grilles) else WHITE,GRAY3 if page*20+20<=len(grilles) else WHITE, next_page)
     xbtn, ybtn = WIDTH - 90 - 5, 5
     button("Règles", xbtn,ybtn, 90,30, GRAY2,GRAY3, show_rules)
     button("Aide", xbtn,ybtn+35, 90,30, GRAY2,GRAY3, show_help)
@@ -243,7 +268,7 @@ def show_buttons(from_undo=False):
 
 
 def main():
-    global grilles, display, clock, current_grid, states, write, cursor_write, cursor_erase, checkmark, won
+    global grilles, display, clock, current_page, current_grid, states, write, cursor_write, cursor_erase, checkmark, won
 
     pygame.init()
     display = pygame.display.set_mode((WIDTH,HEIGHT))
@@ -276,6 +301,7 @@ def main():
         message_display(str(e), 20)
         pygame.display.update()
         raise
+    current_page = 0
     current_grid = None
     print_new_grid(os.listdir("Grilles")[0][:-4]) # current_grid = "04x04 1"
 
