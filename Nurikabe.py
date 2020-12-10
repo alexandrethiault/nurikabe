@@ -47,7 +47,6 @@ def load_grids():
     def cmp(i):
         if i.endswith(".txt"): i = i[:-4]
         t = i.split(" ")
-        print(i)
         for i,elt in enumerate(t):
             if elt.isdigit():
                 t[i] = "0"*max(0,9-len(elt))+elt
@@ -251,7 +250,7 @@ def show_buttons(from_undo=False):
         if i in won:
             display.blit(checkmark, (xbtn + 95 + 1, ybtn))
         ybtn+=35
-
+    ybtn = 35*20+5
     button("<", xbtn,ybtn, 40,30, GRAY1 if page>0 else WHITE,GRAY3 if page>0 else WHITE, prev_page)
     button(">", xbtn+50,ybtn, 40,30, GRAY1 if page*20+20<=len(grilles) else WHITE,GRAY3 if page*20+20<=len(grilles) else WHITE, next_page)
     xbtn, ybtn = WIDTH - 90 - 5, 5
@@ -285,9 +284,9 @@ def main():
             cursor_bin.append(line.split('"')[1])
     cursor_write = pygame.cursors.compile(cursor_bin)
     cursor_erase = pygame.cursors.compile([string[::-1] for string in cursor_bin[::-1]])
-    if pygame.__version__ < "2":
-        cursor_write = ((24,24), (0,0)) + cursor_write
-        cursor_erase = ((24,24), (0,0)) + cursor_erase
+    #if pygame.__version__ < "2":
+    cursor_write = ((24,24), (0,0)) + cursor_write
+    cursor_erase = ((24,24), (0,0)) + cursor_erase
     pygame.mouse.set_cursor(*cursor_write)
 
     checkmark = pygame.image.load(os.path.join("Icones", "correct_icon.png"))
