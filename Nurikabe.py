@@ -93,13 +93,18 @@ def show_new():
     text = "Vous pouvez aussi ajouter d'autres grilles grâce à grille_vide.exe !"
     bottom_message_display(text, 30)
 
-def button(msg,x,y,w,h,ic,ac,action=None):
+def button(msg, x, y, w, h, ic, ac, action=None, actionname=None):
+    global last_clicked
     mouse = pygame.mouse.get_pos()
     click = pygame.mouse.get_pressed()
     if x+w > mouse[0] > x and y+h > mouse[1] > y:
         pygame.draw.rect(display, ac,(x,y,w,h))
         if click[0] == 1 and action is not None:
-            action()
+            if actionname not in last_clicked: last_clicked[actionname] = -1
+            dt = time.time() - last_clicked[actionname]
+            if dt > 0.250:
+                action()
+                last_clicked[actionname] = time.time()
     else:
         pygame.draw.rect(display, ic,(x,y,w,h))
     message_display(msg, 20, x+w//2, y+h//2)
@@ -109,7 +114,6 @@ def undo():
         states.pop()
         print_grid()
         show_buttons(True)
-        time.sleep(0.2)
 
 def verify():
     if current_grid is None: return
@@ -246,28 +250,28 @@ def show_buttons(from_undo=False):
     page = current_page
     button("", 0,0, 135,35*21+5, WHITE,WHITE)
     for i in list(grilles.keys())[page*20:page*20+20]:
-        button(i, xbtn,ybtn, 90,30, GRAY1 if i!=current_grid else GRAY3,GRAY3, lambda:print_new_grid(i))
+        button(i, xbtn,ybtn, 90,30, GRAY1 if i!=current_grid else GRAY3,GRAY3, lambda:print_new_grid(i), f"print{i}")
         if i in won:
             display.blit(checkmark, (xbtn + 95 + 1, ybtn))
         ybtn+=35
     ybtn = 35*20+5
-    button("<", xbtn,ybtn, 40,30, GRAY1 if page>0 else WHITE,GRAY3 if page>0 else WHITE, prev_page)
-    button(">", xbtn+50,ybtn, 40,30, GRAY1 if page*20+20<=len(grilles) else WHITE,GRAY3 if page*20+20<=len(grilles) else WHITE, next_page)
+    button("<", xbtn,ybtn, 40,30, GRAY1 if page>0 else WHITE,GRAY3 if page>0 else WHITE, prev_page, "prev_page")
+    button(">", xbtn+50,ybtn, 40,30, GRAY1 if page*20+20<=len(grilles) else WHITE,GRAY3 if page*20+20<=len(grilles) else WHITE, next_page, "next_page")
     xbtn, ybtn = WIDTH - 90 - 5, 5
-    button("Règles", xbtn,ybtn, 90,30, GRAY2,GRAY3, show_rules)
-    button("Aide", xbtn,ybtn+35, 90,30, GRAY2,GRAY3, show_help)
+    button("Règles", xbtn,ybtn, 90,30, GRAY2,GRAY3, show_rules, "show_rules")
+    button("Aide", xbtn,ybtn+35, 90,30, GRAY2,GRAY3, show_help, "show_help")
     if len(states)>1 and not from_undo:
-        button("Undo", xbtn,ybtn+140, 90,30, GRAY2,GRAY3, undo)
+        button("Undo", xbtn,ybtn+140, 90,30, GRAY2,GRAY3, undo, "undo")
     else:
         button("", xbtn,ybtn+140, 90,30, WHITE,WHITE)
     if states[-1].count(0)+states[-1].count(3)+states[-1].count(4)==0:
-        button("Vérifier", xbtn,ybtn+175, 90,30, GRAY2,GRAY3, verify)
+        button("Vérifier", xbtn,ybtn+175, 90,30, GRAY2,GRAY3, verify, "verify")
     else:
         button("", xbtn,ybtn+175, 90,30, WHITE,WHITE)
 
 
 def main():
-    global grilles, display, clock, current_page, current_grid, states, write, cursor_write, cursor_erase, checkmark, won
+    global grilles, display, clock, current_page, current_grid, states, write, cursor_write, cursor_erase, checkmark, won, last_clicked
 
     pygame.init()
     display = pygame.display.set_mode((WIDTH,HEIGHT))
@@ -294,6 +298,7 @@ def main():
     won = set()
     states = []
     grilles = {}
+    last_clicked = {}
     try:
         load_grids()
     except Exception as e:
