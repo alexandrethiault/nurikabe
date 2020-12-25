@@ -2,11 +2,18 @@
 
 import os
 import time
+import ctypes
 import pygame
-from pygame.locals import QUIT, MOUSEBUTTONDOWN, Rect
+if pygame.__version__ >= "2":
+    from pygame.locals import QUIT, MOUSEBUTTONDOWN, MOUSEWHEEL, Rect
+else:
+    from pygame.locals import QUIT, MOUSEBUTTONDOWN, Rect
 
 
 ## Global parameters
+
+if os.name == "nt":
+    ctypes.windll.shcore.SetProcessDpiAwareness(2)
 
 pygame.init()
 info = pygame.display.Info()
@@ -171,7 +178,6 @@ def set_checkpoint():
 def get_checkpoint():
     global checkpoints, states
     states = [state[:] for state in checkpoints[current_grid]]
-    if current_grid not in won: del checkpoints[current_grid]
     print_grid()
 
 def verify():
@@ -291,7 +297,7 @@ def onclick(b, x, y):
         write = not write
         if write: pygame.mouse.set_cursor(*cursor_write)
         else: pygame.mouse.set_cursor(*cursor_erase)
-    elif COLUMNS_WIDTH <= x <= WIDTH-COLUMNS_WIDTH:
+    elif COLUMNS_WIDTH <= x <= WIDTH-COLUMNS_WIDTH and y <= NURIKABE_SPACE_HEIGHT:
         n, m, grille = grilles[current_grid]
         sq_len = min(NURIKABE_WIDTH//m, NURIKABE_HEIGHT//n, SQUARE_DEFAULT)
         xdeb = WIDTH//2 - sq_len * m // 2
@@ -339,10 +345,13 @@ def show_buttons():
     else:
         fill_white(xbtn,ybtn, BUTTON_WIDTH,BUTTON_HEIGHT)
     ybtn += 2*BUTTON_SPACE_HEIGHT
+    if len(states)>1 and current_grid not in won:
+        button("Mémoriser", xbtn,ybtn, BUTTON_WIDTH,BUTTON_HEIGHT, GRAY1,GRAY3, set_checkpoint, "checkpoint")
+    else:
+        fill_white(xbtn,ybtn, BUTTON_WIDTH,BUTTON_HEIGHT)
+    ybtn += BUTTON_SPACE_HEIGHT
     if current_grid in checkpoints or current_grid in won:
         button("Solution" if current_grid in won else "Mémoire", xbtn,ybtn, BUTTON_WIDTH,BUTTON_HEIGHT, GRAY2,GRAY3, get_checkpoint, "checkpoint")
-    elif len(states)>1 and current_grid not in checkpoints and current_grid not in won:
-        button("Mémoriser", xbtn,ybtn, BUTTON_WIDTH,BUTTON_HEIGHT, GRAY1,GRAY3, set_checkpoint, "checkpoint")
     else:
         fill_white(xbtn,ybtn, BUTTON_WIDTH,BUTTON_HEIGHT)
     ybtn += 2*BUTTON_SPACE_HEIGHT
@@ -393,7 +402,7 @@ def main():
         pygame.display.update()
         while True:
             for event in pygame.event.get():
-                if event.type == pygame.locals.QUIT:
+                if event.type == QUIT:
                     pygame.quit()
                     return 0
     current_page = 0
@@ -407,10 +416,13 @@ def main():
                 return 0
             if event.type == MOUSEBUTTONDOWN:
                 onclick(event.button, event.pos[0], event.pos[1])
+            elif pygame.__version__ >= "2" and event.type == MOUSEWHEEL:
+                onclick(4, 0, 0)
 
         show_buttons()
         pygame.display.update()
         clock.tick(16)
+
 
 if __name__ == "__main__":
     try:
