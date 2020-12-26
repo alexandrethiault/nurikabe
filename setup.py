@@ -27,6 +27,11 @@ incl_dlls = [os.path.join(PYTHON_INSTALL_DIR,"Library","bin",i) for i in incl_dl
 
 excludes = ["babel", "cryptography", "Cython", "distutils", "docutils", "IPython", "jedi", "llvmlite", "lxml", "markupsafe", "matplotlib", "mkl", "nbconvert", "numba", "numpy", "PIL", "prompt_toolkit", "psutil", "PyQt5", "pytest", "pytz", "scipy", "sphinx", "tkinter", "tornado", "win32com", "zmq", "email", "html", "http", "logging", "pkg_resources", "pydoc_data", "pyreadline", "test", "unittest", "urllib", "xml"]
 
+if pygame.__version__ < "2":
+    include_files = ["Icones", "Grilles"] + incl_dlls
+else:
+    include_files = ["cleanup.bat", "cleanup.sh", "Icones", "Grilles"] + incl_dlls
+
 base = None
 if sys.platform == "win32":
     base = "Win32GUI"
@@ -41,7 +46,7 @@ cx_Freeze.setup(
         {
             "packages": ["pygame", "ctypes"],
             "excludes": excludes,
-            "include_files": ["cleanup.bat", "cleanup.sh", "Icones", "Grilles"] + incl_dlls
+            "include_files": include_files
         },
         "bdist_msi":
         {
