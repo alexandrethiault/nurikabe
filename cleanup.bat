@@ -7,6 +7,7 @@ del python3.dll 2>NUL
 del api-ms-win-crt-*.dll 2>NUL
 
 del lib\python3*.dll 2>NUL
+del lib\libcrypto-1_1-x64.dll 2>NUL
 del lib\unicodedata.pyd 2>NUL
 del lib\vcruntime140.dll 2>NUL
 del lib\api-ms-win-crt-*.dll 2>NUL

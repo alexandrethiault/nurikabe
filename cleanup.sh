@@ -5,6 +5,7 @@ rm python3.dll
 rm api-ms-win-crt-*.dll
 
 rm lib/python3*.dll
+rm lib/libcrypto-1_1-x64.dll
 rm lib/unicodedata.pyd
 rm lib/vcruntime140.dll
 rm lib/api-ms-win-crt-*.dll
