@@ -304,7 +304,7 @@ def onclick(b, x, y):
         ydeb = NURIKABE_SPACE_HEIGHT//2 - sq_len * n // 2
         xfin = xdeb + sq_len * m
         yfin = ydeb + sq_len * n
-        if xdeb<=x<=xfin and ydeb<=y<=yfin:
+        if xdeb<=x<xfin and ydeb<=y<yfin:
             j = (x-xdeb)//sq_len
             i = (y-ydeb)//sq_len
             states.append(states[-1][:])
