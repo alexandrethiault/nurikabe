@@ -1,2 +1,8 @@
 build/
 dist/
+driver/
+*.py
+!grille_vide.py
+!Nurikabe.py
+!setup.py
+.gitignore
